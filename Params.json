@@ -1,0 +1,83 @@
+{
+  "prerun-iterations": 1000,
+  "total-iterations": 150000,
+  "iterations-without-syncing-threads": 1,
+  "prob-return-to-best-known": 0.0,
+
+  "acceptance-criterion-possible-values": [
+    "Hill climbing",
+    "Simulated annealing",
+    "Threshold acceptance",
+    "Great deluge",
+    "Record-to-record travel",
+    "Late acceptance hill climbing",
+    "Non-Linear Great Deluge",
+    "Worse accept",
+    "Conservative worse accept",
+    "Discreet worse accept",
+    "Random walk",
+    "Custom"
+  ],
+  "acceptance-criterion": "Simulated annealing",
+
+  "scores": {
+    "accepted": 2.0,
+    "improved": 4.0,
+    "global-best": 10.0,
+    "decay": 0.99
+  },
+
+  "parameter-tuning-file": "ParTuningResults.txt",
+  "results-log-basename": "Summary",
+
+  "acceptance": {
+    "simulated-annealing": {
+      "init-ratio-50p": 0.9,
+      "end-ratio-50p": 0.01,
+      "end-ratio-50p-refers-to-initial": false,
+      "temperature-decrease-is-linear": false,
+      "reheating": false,
+      "reheating-coefficient": 5.0,
+      "reheating-times": 2,
+      "magic-number-exponent": 1.0
+    },
+    "threshold-acceptance": {
+      "start-threshold": 0.05,
+      "end-threshold": 0.001,
+      "threshold-decrease-is-linear": true
+    },
+    "great-deluge": {
+      "initial-water-level-ratio": 1.1,
+      "water-level-decrease-pct": 0.01
+    },
+    "record-to-record": {
+      "start-deviation": 0.1,
+      "end-deviation": 0.01,
+      "deviation-decrease-is-linear": true
+    },
+    "late-acceptance-hill-climbing": {
+      "list-size": 5000,
+      "allow-non-worsening": true
+    },
+    "non-linear-great-deluge": {
+      "initial-water-level-ratio": 1.0,
+      "gap-to-increase-water-level": 0.01,
+      "water-level-increase-pct": 0.05,
+      "water-level-decrease-exp-factor": 0.01
+    },
+    "worse-accept": {
+      "start-probability": 0.1,
+      "end-probability": 0.01,
+      "probability-decrease-is-linear": false
+    },
+    "conservative-worse-accept": {
+      "start-probability": 0.1,
+      "end-probability": 0.01,
+      "probability-decrease-is-linear": false
+    },
+    "discreet-worse-accept": {
+      "consecutive-rejects-for-100p": 5,
+      "probability-increase-is-linear": true
+    }
+  }
+}
