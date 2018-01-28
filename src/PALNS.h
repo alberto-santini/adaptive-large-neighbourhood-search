@@ -513,6 +513,8 @@ namespace mlpalns {
                 threads[i] = std::thread([i, this]() { start_thread(i); });
             }
 
+            algorithm_visitor->on_algorithm_start(destroy_methods_descriptions, repair_methods_descriptions);
+
             for(auto& thread : threads) {
                 thread.join();
             }

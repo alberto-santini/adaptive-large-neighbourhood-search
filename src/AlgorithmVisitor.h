@@ -6,12 +6,17 @@
 #define ML_PALNS_ALGORITHMVISITOR_H
 
 #include "AlgorithmStatus.h"
+#include <vector>
+#include <string>
 
 namespace mlpalns {
     template<class Solution>
     struct AlgorithmVisitor {
         AlgorithmVisitor() = default;
-        
+
+        virtual void on_algorithm_start(const std::vector<std::string>& destroy_methods_desc,
+                                        const std::vector<std::string>& repair_methods_desc) = 0;
+
         virtual void on_iteration_end(AlgorithmStatus<Solution>& alg_status) = 0;
         
         virtual ~AlgorithmVisitor() = default;
