@@ -87,7 +87,7 @@ namespace mlpalns {
     template<typename Solution>
     bool LateAcceptanceHillClimbing<Solution>::should_accept(double, double, double new_obj, double eps, Solution&, std::mt19937&) {
         bool accepted = false;
-        auto current_index = sol_index - 1;
+        long int current_index = static_cast<long int>(sol_index) - 1;
 
         if(current_index < 0) {
             current_index = sol_list.size() - 1;

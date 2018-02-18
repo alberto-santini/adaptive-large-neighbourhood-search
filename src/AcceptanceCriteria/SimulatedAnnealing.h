@@ -162,7 +162,7 @@ namespace mlpalns {
             // End temperature depends on current best solution value =>
             // Adjust when reheating and when best solution value changes
 
-            if(reheating || std::abs(best_obj - best_obj) > 1e-7) {
+            if(reheating || std::abs(this->best_obj - best_obj) > 1e-7) {
                 auto iterationsToReachEndTemp = 0u;
                 auto reheatingIterations = std::min(reheating_iters, this->params.max_iters - iter_number);
 

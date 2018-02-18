@@ -11,7 +11,7 @@ namespace mlpalns {
         double current_prob;
 
         /*! Are we decreasing the probability linearly or exponentially? */
-        double prob_decrease_is_linear;
+        bool prob_decrease_is_linear;
 
         /*! If the probability decreases linearly, that's the amount by which it decreases at each iteration */
         double prob_decrease;

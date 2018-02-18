@@ -261,7 +261,7 @@ namespace mlpalns {
             // Main loop
             while(!done) {
                 // ****** 1. Check if we are done ******
-
+                
                 // Local current iteration
                 auto cur_iter = 0u;
 
