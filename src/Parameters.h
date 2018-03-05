@@ -150,6 +150,10 @@ namespace mlpalns {
         // Maximum number of iterations
         std::uint32_t max_iters;
 
+        // The number of consecutive iterations without improving the global best,
+        // which can be considered "alarming".
+        std::uint32_t iters_without_improvement_alarm;
+
         // Maximum run time in seconds
         double max_seconds;
 
@@ -181,6 +185,7 @@ namespace mlpalns {
             max_iters = t.get<ui>("total-iterations");
             max_independent_thread_iters = t.get<ui>("iterations-without-syncing-threads");
             max_seconds = t.get<double>("timeout-s");
+            iters_without_improvement_alarm = t.get<ui>("iters-without-improvement-alarm");
 
             // Acceptance criterion
             std::string ac;
@@ -326,6 +331,7 @@ namespace mlpalns {
             acceptance_criterion_id = AcceptanceCriterionId::SimulatedAnnealing;
             max_iters = 50000;
             max_seconds = 60;
+            iters_without_improvement_alarm = 5000;
             score_mult_accepted = 2;
             score_mult_improved = 4;
             score_mult_global_best = 10;

@@ -64,7 +64,7 @@ namespace mlpalns {
          *  @param   description       A string description of the destroy method.
          *  @returns                   The index of the newly added method in the destroy methods vector.
          */
-        std::size_t add_destroy_method(const DestroyMethod<Solution>& destroy_method, std::string description) {
+        std::size_t add_destroy_method(DestroyMethod<Solution>& destroy_method, std::string description) {
             destroy_methods.push_back(&destroy_method);
             destroy_methods_descriptions.push_back(description);
 
@@ -81,7 +81,7 @@ namespace mlpalns {
          *  @param   description       A string description of the repair method.
          *  @returns                   The index of the newly added method in the repair methods vector.
          */
-        std::size_t add_repair_method(const RepairMethod<Solution>& repair_method, std::string description) {
+        std::size_t add_repair_method(RepairMethod<Solution>& repair_method, std::string description) {
             repair_methods.push_back(&repair_method);
             repair_methods_descriptions.push_back(description);
             repair_compatible_with_all.push_back(true);
@@ -101,7 +101,7 @@ namespace mlpalns {
          *  @param  compatible_with  A list of indices of destroy methods, with which the repair method is compatible.
          *  @returns                 The index of the newly added method in the repair methods vector.
          */
-        std::size_t add_repair_method(const RepairMethod<Solution>& repair_method, std::string description, std::vector<std::size_t> compatible_with) {
+        std::size_t add_repair_method(RepairMethod<Solution>& repair_method, std::string description, std::vector<std::size_t> compatible_with) {
             repair_methods.push_back(&repair_method);
             repair_methods_descriptions.push_back(description);
             repair_compatible_with_all.push_back(false);
@@ -143,6 +143,14 @@ namespace mlpalns {
 
             // Initialise method-specific parameters in the acceptance criterion
             acceptance_criterion->initialise();
+
+            // Invoke the algorithm visitor at the beginning of the algorithm
+            algorithm_visitor->on_algorithm_start(
+                destroy_methods,
+                repair_methods,
+                destroy_methods_descriptions,
+                repair_methods_descriptions
+            );
 
             // Make a preliminary run
             do_preliminary_run(num_threads);
@@ -220,29 +228,43 @@ namespace mlpalns {
             // Local copies of destroy and repair methods
             std::vector<std::unique_ptr<DestroyMethod<Solution>>> loc_destroy_methods;
             std::vector<std::unique_ptr<RepairMethod<Solution>>> loc_repair_methods;
+            std::vector<std::vector<std::size_t>> loc_repair_compatibility;
 
-            for(auto& method : destroy_methods) {
-                loc_destroy_methods.push_back(method->clone());
-            }
+            auto make_local_copies_of_dr_methods = [&,this] () -> void {
+                loc_destroy_methods.clear();
+                loc_repair_methods.clear();
 
-            std::vector<std::vector<std::size_t>> loc_repair_compatibility(destroy_methods.size());
-            for(auto i = 0u; i < repair_methods.size(); ++i) {
-                loc_repair_methods.push_back(repair_methods[i]->clone());
+                std::lock_guard<std::mutex> _(destroy_repair_mtx);
 
-                if(!repair_compatible_with_all[i]) {
-                    const auto& comp_vec = repair_compatibility_list[i];
-                    for(auto j = 0u; j < comp_vec.size(); ++j) {
-                        loc_repair_compatibility[comp_vec[j]].push_back(i);
-                    }
-                } else {
-                    for(auto dest_id = 0u; dest_id < destroy_methods.size(); ++dest_id) {
-                        loc_repair_compatibility[dest_id].push_back(i);
+                for(auto& method : destroy_methods) {
+                    loc_destroy_methods.push_back(method->clone());
+                }
+
+                loc_repair_compatibility.resize(destroy_methods.size());
+                for(auto i = 0u; i < repair_methods.size(); ++i) {
+                    loc_repair_methods.push_back(repair_methods[i]->clone());
+
+                    if(!repair_compatible_with_all[i]) {
+                        const auto& comp_vec = repair_compatibility_list[i];
+                        for(auto j = 0u; j < comp_vec.size(); ++j) {
+                            loc_repair_compatibility[comp_vec[j]].push_back(i);
+                        }
+                    } else {
+                        for(auto dest_id = 0u; dest_id < destroy_methods.size(); ++dest_id) {
+                            loc_repair_compatibility[dest_id].push_back(i);
+                        }
                     }
                 }
-            }
+            };
+
+            make_local_copies_of_dr_methods();
 
             // Counter of number of iterations the current thread has worked since last time it synchronised its data
             std::uint64_t local_iterations_count = 0;
+
+            // Last iteration in which we recorded that the number of iterations without improvement was too high,
+            // and we called the algorithm visitor to do something about it.
+            std::uint32_t last_iter_global_alarm_visitor_called = 0u;
 
             // Create a temporary solution to apply destroy and repair to
             Solution tmp_sol = threadsafe_clone_solution(current_solution, current_solution_mtx);
@@ -451,6 +473,7 @@ namespace mlpalns {
                                 if(new_sol_cost < best_solution.getCost() - eps) {
                                     // Updated global best
                                     best_solution = tmp_sol;
+                                    last_gobal_improvement_iter = num_iter;
                                     new_global_best = true;
                                 }
                             }
@@ -482,10 +505,21 @@ namespace mlpalns {
                     // Do we have an algorithm visitor? If so, call it
                     if(algorithm_visitor && num_iter > params.prerun_iters) {
                         AlgorithmStatus<Solution> status(params, tmp_sol, best_solution);
+                        bool should_raise_global_improvement_alarm = false;
 
                         {
                             std::lock_guard<std::mutex> _ni(num_iter_mtx);
                             status.iter_number = num_iter - params.prerun_iters;
+
+                            // If the last time the global best was improved happend iters_without_improvement_alarm iterations ago:
+                            if(num_iter >= last_gobal_improvement_iter + params.iters_without_improvement_alarm) {
+                                // If we haven't raised this alarm during the past iters_without_improvement_alarm previous iterations:
+                                if(last_iter_global_alarm_visitor_called <= num_iter - params.iters_without_improvement_alarm) {
+                                    // We should raise the alarm!
+                                    should_raise_global_improvement_alarm = true;
+                                    last_iter_global_alarm_visitor_called = num_iter;
+                                }
+                            }
                         }
 
                         status.destroy_method_id = chosen_destroy_id;
@@ -497,6 +531,15 @@ namespace mlpalns {
                             // The visitor could modify the best solution:
                             std::lock_guard<std::mutex> _bs(best_solution_mtx);
                             algorithm_visitor->on_iteration_end(status);
+                        }
+
+                        if(should_raise_global_improvement_alarm) {
+                            // The visitor could modify the detroy/repair methods:
+                            {
+                                std::lock_guard<std::mutex> _dr(destroy_repair_mtx);
+                                algorithm_visitor->on_many_iters_without_improvement(destroy_methods, repair_methods);
+                            }
+                            make_local_copies_of_dr_methods();
                         }
                     }
                 }
@@ -512,8 +555,6 @@ namespace mlpalns {
             for(auto i = 0u; i < num_threads; ++i) {
                 threads[i] = std::thread([i, this]() { start_thread(i); });
             }
-
-            algorithm_visitor->on_algorithm_start(destroy_methods_descriptions, repair_methods_descriptions);
 
             for(auto& thread : threads) {
                 thread.join();
@@ -626,6 +667,9 @@ namespace mlpalns {
         void reset_local_parameters(Solution start_solution, Parameters& parameters)  {
             // We start at iteration 0
             num_iter = 0u;
+
+            // No improvement yet.
+            last_gobal_improvement_iter = 0u;
 
             // Reset the start time
             start_time = std::chrono::high_resolution_clock::now();
@@ -760,6 +804,9 @@ namespace mlpalns {
 
             // Perform the calibration!
             acceptance_criterion->calibrate(calibration_data);
+
+            // Invoke the appropriate algorithm visitor
+            algorithm_visitor->on_prerun_end(destroy_methods, repair_methods);
         }
 
         /*! @brief Clones a solution (but first locks the corresponding mutex).
@@ -807,10 +854,10 @@ namespace mlpalns {
         // ----- Member variables that are copied in each thread. -----
 
         /*! @brief List of destroy methods. */
-        std::vector<const DestroyMethod<Solution>*> destroy_methods;
+        std::vector<DestroyMethod<Solution>*> destroy_methods;
 
         /*! @brief List of repair methods. */
-        std::vector<const RepairMethod<Solution>*> repair_methods;
+        std::vector<RepairMethod<Solution>*> repair_methods;
 
         // ----- Shared variables. Each is protected by a mutex. -----
 
@@ -825,6 +872,9 @@ namespace mlpalns {
 
         /*! @brief Current iteration number. */
         std::uint32_t num_iter;
+
+        /*! @brief Last iteration at which the global best was improved. */
+        std::uint32_t last_gobal_improvement_iter;
 
         /*! @brief Start time of the algorithm. */
         std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
@@ -858,6 +908,9 @@ namespace mlpalns {
 
         /*! @brief Mutex on the weights of destroy/repair methods. */
         std::mutex weights_mtx;
+
+        /*! @brief Mutex on the destroy/repair methods. */
+        std::mutex destroy_repair_mtx;
 
         // ----- Shared constants. These must not be changed while PALNS is running. -----
 
