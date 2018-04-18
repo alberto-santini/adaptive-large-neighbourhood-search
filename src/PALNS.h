@@ -302,6 +302,13 @@ namespace mlpalns {
                     auto current_time = std::chrono::high_resolution_clock::now();
                     auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - start_time).count();
                     if(elapsed_time > params.max_seconds) {
+                        std::cout << "Early termination at iteration " << num_iter << " because of timeout\n";
+                        done = true;
+                    }
+
+                    // Check for iters without improvement
+                    if(num_iter > params.iters_without_improvement_max && last_gobal_improvement_iter < num_iter - params.iters_without_improvement_max) {
+                        std::cout << "Early termination at iteration " << num_iter << " because of too many iterations without improvement\n";
                         done = true;
                     }
 
@@ -322,7 +329,7 @@ namespace mlpalns {
 
                     // Check if it's time to print output
                     if((cur_iter % print_output_iter) == 0) {
-                        std::string acceptance_data;
+                        std::string acceptance_d ata;
 
                         // Get data from the acceptance criterion
                         {

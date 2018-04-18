@@ -1,6 +1,10 @@
 {
   "prerun-iterations": 1000,
   "total-iterations": 150000,
+  "timeout-s": 60,
+  "iters-without-improvement-max": 5000,
+  "iters-without-improvement-alarm": 1000,
+
   "iterations-without-syncing-threads": 1,
   "prob-return-to-best-known": 0.0,
 
