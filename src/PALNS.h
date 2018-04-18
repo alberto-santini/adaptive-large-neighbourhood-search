@@ -329,7 +329,7 @@ namespace mlpalns {
 
                     // Check if it's time to print output
                     if((cur_iter % print_output_iter) == 0) {
-                        std::string acceptance_d ata;
+                        std::string acceptance_data;
 
                         // Get data from the acceptance criterion
                         {
