@@ -54,9 +54,10 @@ namespace mlpalns {
         /*! This method updates the acceptance criterion's parameters, based on running info
          *
          *  @param iter_number is the current iteration number
+         *  @param elapsed_time is the current elapsed time
          *  @param best_obj is the value of the current best solution
          */
-        void update_parameters(std::uint32_t iter_number, double best_obj) override;
+        void update_parameters(std::uint32_t iter_number, double elapsed_time, double best_obj) override;
 
         /*! This method returns true iff the solution should be accepted according to the acceptance criterion
          *
@@ -130,8 +131,10 @@ namespace mlpalns {
     }
 
     template<typename Solution>
-    void SimulatedAnnealing<Solution>::update_parameters(std::uint32_t iter_number, double best_obj) {
+    void SimulatedAnnealing<Solution>::update_parameters(std::uint32_t iter_number, double, double best_obj) {
         bool reheating = false;
+
+        assert(params.acceptance_params_base == Parameters::AcceptanceParamsBase::Iterations);
 
         // Check if we have to reheat
         if(this->params.sa_params.reheating_is_enabled && (iter_number - this->params.prerun_iters) % reheating_iters == 0) {
@@ -155,7 +158,7 @@ namespace mlpalns {
                 std::cout << "Recalibrating parameters to go from " << temperature << " to " << end_temperature << " in " << reheatingIterations
                           << " iterations" << std::endl;
 
-                alpha = std::min(pow(end_temperature / temperature, 1.0 / reheatingIterations), 1.0);
+                alpha = std::min(std::pow(end_temperature / temperature, 1.0 / reheatingIterations), 1.0);
                 beta = std::max((temperature - end_temperature) / reheatingIterations, 0.0);
             }
         } else {

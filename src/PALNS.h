@@ -287,6 +287,10 @@ namespace mlpalns {
                 // Local current iteration
                 auto cur_iter = 0u;
 
+                // Calculate elapsed time
+                auto current_time = std::chrono::high_resolution_clock::now();
+                auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - start_time).count();
+
                 {
                     // Acquire lock on iteration counter
                     std::lock_guard<std::mutex> _(num_iter_mtx);
@@ -299,8 +303,6 @@ namespace mlpalns {
                     }
 
                     // Check for timeout
-                    auto current_time = std::chrono::high_resolution_clock::now();
-                    auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - start_time).count();
                     if(elapsed_time > params.max_seconds) {
                         std::cout << "Early termination at iteration " << num_iter << " because of timeout\n";
                         done = true;
@@ -361,7 +363,7 @@ namespace mlpalns {
                     // Update acceptance criterion parameters
                     {
                         std::lock_guard<std::mutex> _(acceptance_criterion_mtx);
-                        acceptance_criterion->update_parameters(cur_iter, best_sol_cost);
+                        acceptance_criterion->update_parameters(cur_iter, elapsed_time, best_sol_cost);
                     }
 
                     bool improved = false;

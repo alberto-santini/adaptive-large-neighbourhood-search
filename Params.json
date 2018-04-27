@@ -24,6 +24,11 @@
   ],
   "acceptance-criterion": "Simulated annealing",
 
+  "acceptance-params-base-possible-values": [
+    "time", "iterations"
+  ],
+  "acceptance-params-base": "time",
+
   "scores": {
     "accepted": 2.0,
     "improved": 4.0,

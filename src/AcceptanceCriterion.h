@@ -31,11 +31,19 @@ namespace mlpalns {
         /*! Reference to parameters object */
         Parameters& params;
 
+        /*! Tells wether adjustment to parameters which vary during the solution process should be done based
+         *  on elapsed time, or number of iterations.
+         */
+        bool timebase;
+
         /*! Stateful parameter that is true iff the acceptance criterion is being used in a ``preliminary run'' */
         bool preliminary_run;
 
         /*! Basic constructor */
-        AcceptanceCriterion(Parameters& par) : params(par), preliminary_run(false) {}
+        AcceptanceCriterion(Parameters& par) :
+                params(par),
+                timebase(par.acceptance_params_base == Parameters::AcceptanceParamsBase::Time),
+                preliminary_run(false) {}
 
         /*! Setter for the preliminary run flag */
         void set_preliminary_run() { preliminary_run = true; }
@@ -60,9 +68,10 @@ namespace mlpalns {
         /*! This method updates the acceptance criterion's parameters, based on running info
          *
          *  @param iter_number is the current iteration number
+         *  @param elapsed_time is the current elapsed time
          *  @param best_obj is the value of the current best solution
          */
-        virtual void update_parameters(std::uint32_t iter_number, double best_obj) = 0;
+        virtual void update_parameters(std::uint32_t iter_number, double elapsed_time, double best_obj) = 0;
 
         /*! This method returns true iff the solution should be accepted according to the acceptance criterion
          *

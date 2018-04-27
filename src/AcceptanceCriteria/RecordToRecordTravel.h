@@ -10,10 +10,10 @@ namespace mlpalns {
         /*! Deviation */
         double deviation;
 
-        /*! Deviation step, when decrease is linear */
+        /*! Deviation step per iteration, when decrease is linear */
         double deviation_step;
 
-        /*! Deviation multiplicative coefficient, when decrease is exponential */
+        /*! Deviation multiplicative coefficient per iteration, when decrease is exponential */
         double deviation_exp_coeff;
 
         /*! Basic constructor */
@@ -32,9 +32,10 @@ namespace mlpalns {
         /*! This method updates the acceptance criterion's parameters, based on running info
          *
          *  @param iter_number is the current iteration number
+         *  @param elapsed_time is the current elapsed time
          *  @param best_obj is the value of the current best solution
          */
-        void update_parameters(std::uint32_t iter_number, double best_obj) override;
+        void update_parameters(std::uint32_t iter_number, double elapsed_time, double best_obj) override;
 
         /*! This method returns true iff the solution should be accepted according to the acceptance criterion
          *
@@ -61,7 +62,7 @@ namespace mlpalns {
         deviation_step =
             (this->params.rrt_params.start_deviation - this->params.rrt_params.end_deviation) / (this->params.max_iters - this->params.prerun_iters);
         deviation_exp_coeff =
-            pow(this->params.rrt_params.start_deviation / this->params.rrt_params.end_deviation, 1.0 / (this->params.max_iters - this->params.prerun_iters));
+            std::pow(this->params.rrt_params.start_deviation / this->params.rrt_params.end_deviation, 1.0 / (this->params.max_iters - this->params.prerun_iters));
     }
 
     template<typename Solution>
@@ -70,11 +71,24 @@ namespace mlpalns {
     }
 
     template<typename Solution>
-    void RecordToRecordTravel<Solution>::update_parameters(std::uint32_t, double) {
-        if(this->params.rrt_params.deviation_decrease_is_linear) {
-            deviation -= deviation_step;
+    void RecordToRecordTravel<Solution>::update_parameters(std::uint32_t, double elapsed_time, double) {
+        if(this->timebase) {
+            const double S = this->params.rrt_params.start_deviation;
+            const double E = this->params.rrt_params.end_deviation;
+            const double T = this->params.max_seconds;
+
+            if(this->params.rrt_params.deviation_decrease_is_linear) {
+                deviation = S + (elapsed_time / T) * (E - S);
+            } else {
+                const double lambda = std::log(S / T) / T;
+                deviation = S * std::exp(-lambda * T);
+            }
         } else {
-            deviation *= deviation_exp_coeff;
+            if(this->params.rrt_params.deviation_decrease_is_linear) {
+                deviation -= deviation_step;
+            } else {
+                deviation *= deviation_exp_coeff;
+            }
         }
     }
 

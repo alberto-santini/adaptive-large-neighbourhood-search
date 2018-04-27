@@ -129,7 +129,12 @@ namespace mlpalns {
             Custom
         };
 
+        enum class AcceptanceParamsBase : std::uint32_t {
+            Time, Iterations
+        };
+
         AcceptanceCriterionId acceptance_criterion_id;
+        AcceptanceParamsBase acceptance_params_base;
 
         SimulatedAnnealingParameters sa_params;
         ThresholdParameters ta_params;
@@ -218,6 +223,15 @@ namespace mlpalns {
                 acceptance_criterion_id = AcceptanceCriterionId::DiscreetWorseAccept;
             } else if(ac == "Random walk") {
                 acceptance_criterion_id = AcceptanceCriterionId::RandomWalk;
+            }
+
+            std::string pb;
+            pb = t.get<std::string>("acceptance-params-base");
+
+            if(pb == "time") {
+                acceptance_params_base = AcceptanceParamsBase::Time;
+            } else if(pb == "iterations") {
+                acceptance_params_base = AcceptanceParamsBase::Iterations;
             }
 
             // Simulated annealing
@@ -334,6 +348,7 @@ namespace mlpalns {
                 );
 
             acceptance_criterion_id = AcceptanceCriterionId::SimulatedAnnealing;
+            acceptance_params_base = AcceptanceParamsBase::Iterations;
             max_iters = 50000;
             max_seconds = 60;
             iters_without_improvement_alarm = 1000;

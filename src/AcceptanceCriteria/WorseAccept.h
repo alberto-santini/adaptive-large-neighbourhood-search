@@ -32,9 +32,10 @@ namespace mlpalns {
         /*! This method updates the acceptance criterion's parameters, based on running info
          *
          *  @param iter_number is the current iteration number
+         *  @param elapsed_time is the current elapsed time
          *  @param best_obj is the value of the current best solution
          */
-        void update_parameters(std::uint32_t iter_number, double best_obj) override;
+        void update_parameters(std::uint32_t iter_number, double elapsed_time, double best_obj) override;
 
         /*! This method returns true iff the solution should be accepted according to the acceptance criterion
          *
@@ -68,16 +69,28 @@ namespace mlpalns {
     }
 
     template<typename Solution>
-    void WorseAccept<Solution>::update_parameters(std::uint32_t iter_number, double) {
-        if(prob_decrease_is_linear) {
-            current_prob -= prob_decrease;
+    void WorseAccept<Solution>::update_parameters(std::uint32_t iter_number, double elapsed_time, double) {
+        const double S = this->params.wa_params.start_prob;
+        const double E = this->params.wa_params.end_prob;
+
+        if(this->timebase) {
+            const double T = this->params.max_seconds;
+
+            if(prob_decrease_is_linear) {
+                current_prob = S + (elapsed_time / T) * (E - S);
+            } else {
+                const auto lambda = std::log(S / T) / T;
+                current_prob = S * std::exp(- lambda * T);
+            }
         } else {
-            double S = this->params.wa_params.start_prob;
-            double E = this->params.wa_params.end_prob;
-            auto N = this->params.max_iters - this->params.prerun_iters;
-            double lambda = log(S / E) / N;
-            auto n = iter_number - this->params.prerun_iters;
-            current_prob = S * exp(-lambda * n);
+            if (prob_decrease_is_linear) {
+                current_prob -= prob_decrease;
+            } else {
+                const auto N = this->params.max_iters - this->params.prerun_iters;
+                const double lambda = std::log(S / E) / N;
+                const auto n = iter_number - this->params.prerun_iters;
+                current_prob = S * std::exp(-lambda * n);
+            }
         }
     }
 

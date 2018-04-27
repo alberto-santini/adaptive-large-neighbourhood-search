@@ -32,9 +32,10 @@ namespace mlpalns {
         /*! This method updates the acceptance criterion's parameters, based on running info
          *
          *  @param iter_number is the current iteration number
+         *  @param elapsed_time is the current elapsed time
          *  @param best_obj is the value of the current best solution
          */
-        void update_parameters(std::uint32_t iter_number, double best_obj) override;
+        void update_parameters(std::uint32_t iter_number, double elapsed_time, double best_obj) override;
 
         /*! This method returns true iff the solution should be accepted according to the acceptance criterion
          *
@@ -70,11 +71,24 @@ namespace mlpalns {
     }
 
     template<typename Solution>
-    void ThresholdAcceptance<Solution>::update_parameters(std::uint32_t, double) {
-        if(this->params.ta_params.threshold_decrease_is_linear) {
-            current_threshold -= threshold_decrease;
+    void ThresholdAcceptance<Solution>::update_parameters(std::uint32_t, double elapsed_time, double) {
+        if(this->timebase) {
+            const double S = this->params.ta_params.start_threshold;
+            const double E = this->params.ta_params.end_threshold;
+            const double T = this->params.max_seconds;
+
+            if(this->params.ta_params.threshold_decrease_is_linear) {
+                current_threshold = S + (elapsed_time / T) * (E - S);
+            } else {
+                const double lambda = std::log(S / T) / T;
+                current_threshold = S * std::exp(-lambda * T);
+            }
         } else {
-            current_threshold *= threshold_exp_coeff;
+            if (this->params.ta_params.threshold_decrease_is_linear) {
+                current_threshold -= threshold_decrease;
+            } else {
+                current_threshold *= threshold_exp_coeff;
+            }
         }
     }
 
