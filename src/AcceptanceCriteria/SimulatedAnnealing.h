@@ -134,7 +134,7 @@ namespace mlpalns {
     void SimulatedAnnealing<Solution>::update_parameters(std::uint32_t iter_number, double, double best_obj) {
         bool reheating = false;
 
-        assert(params.acceptance_params_base == Parameters::AcceptanceParamsBase::Iterations);
+        assert(this->params.acceptance_params_base == Parameters::AcceptanceParamsBase::Iterations);
 
         // Check if we have to reheat
         if(this->params.sa_params.reheating_is_enabled && (iter_number - this->params.prerun_iters) % reheating_iters == 0) {
