@@ -95,6 +95,6 @@ namespace mlpalns {
 
         return accept;
     }
-}
+} // namespace mlpalns
 
 #endif

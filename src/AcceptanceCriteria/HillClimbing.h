@@ -58,6 +58,6 @@ namespace mlpalns {
     bool HillClimbing<Solution>::should_accept(double, double current_obj, double new_obj, double eps, Solution&, std::mt19937&) {
         return (new_obj < current_obj - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

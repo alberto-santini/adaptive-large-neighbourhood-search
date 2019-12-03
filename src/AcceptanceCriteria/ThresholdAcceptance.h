@@ -84,7 +84,7 @@ namespace mlpalns {
                 current_threshold = S * std::exp(-lambda * T);
             }
         } else {
-            if (this->params.ta_params.threshold_decrease_is_linear) {
+            if(this->params.ta_params.threshold_decrease_is_linear) {
                 current_threshold -= threshold_decrease;
             } else {
                 current_threshold *= threshold_exp_coeff;
@@ -97,6 +97,6 @@ namespace mlpalns {
         double gap = (new_obj - current_obj) / new_obj;
         return (gap < current_threshold - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

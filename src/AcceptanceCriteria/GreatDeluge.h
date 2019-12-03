@@ -81,6 +81,6 @@ namespace mlpalns {
         last_obj_value = current_obj;
         return (new_obj < water_level - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

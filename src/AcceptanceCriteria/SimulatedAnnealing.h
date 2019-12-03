@@ -210,6 +210,6 @@ namespace mlpalns {
 
         return (dist(mt) < exp((current_obj - new_obj) / temperature) - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

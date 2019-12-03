@@ -61,8 +61,8 @@ namespace mlpalns {
         deviation = this->params.rrt_params.start_deviation;
         deviation_step =
             (this->params.rrt_params.start_deviation - this->params.rrt_params.end_deviation) / (this->params.max_iters - this->params.prerun_iters);
-        deviation_exp_coeff =
-            std::pow(this->params.rrt_params.start_deviation / this->params.rrt_params.end_deviation, 1.0 / (this->params.max_iters - this->params.prerun_iters));
+        deviation_exp_coeff = std::pow(this->params.rrt_params.start_deviation / this->params.rrt_params.end_deviation,
+                                       1.0 / (this->params.max_iters - this->params.prerun_iters));
     }
 
     template<typename Solution>
@@ -97,6 +97,6 @@ namespace mlpalns {
         double gap = (new_obj - best_obj) / new_obj;
         return (gap < deviation - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

@@ -129,9 +129,7 @@ namespace mlpalns {
             Custom
         };
 
-        enum class AcceptanceParamsBase : std::uint32_t {
-            Time, Iterations
-        };
+        enum class AcceptanceParamsBase : std::uint32_t { Time, Iterations };
 
         AcceptanceCriterionId acceptance_criterion_id;
         AcceptanceParamsBase acceptance_params_base;
@@ -306,46 +304,46 @@ namespace mlpalns {
                                              false, // Enable reheating?
                                              5.0,   // Reheat to the temperature at the time of the last improvement times this coefficient
                                              3      // Reheat this number of times
-                                             );
+                );
 
             ta_params = ThresholdParameters(0.05,  // Start Threshold
                                             0.001, // End Threshold
                                             true   // Threshold decrease is linear (as opposed to exponential decay)
-                                            );
+            );
 
             gd_params = GreatDelugeParameters(1.1, // Initial water level ratio (* initial solution value)
                                               0.01 // Water level decrease rate (* avg gap btw current and water level)
-                                              );
+            );
 
             rrt_params = RecordDeviationParameters(0.1,  // Start deviation
                                                    0.01, // End deviation
                                                    true  // Deviation decrease is linear (as opposed to exponential decay)
-                                                   );
+            );
 
             lahc_params = LateAcceptanceParameters(5000, // List size
                                                    true  // Accept all non-worsening moves
-                                                   );
+            );
 
             nlgd_params = NLGreatDelugeParameters(1.1,  // Initial water level (* initial solution value)
                                                   0.01, // Gap to increase the water level
                                                   0.05, // Water level increase percentage
                                                   0.01  // Water level decrease exponent factor
-                                                  );
+            );
 
             wa_params = WorseAcceptParameters(0.1,  // Initial probability
                                               0.01, // Final probability
                                               true  // Probability of accepting decreases linearly (as opposed to exponentially)
-                                              );
+            );
 
             cwa_params = ConservativeWorseAcceptParameters(0.1,  // Initial probability
                                                            0.01, // Final probability
                                                            true  // Probability of accepting decreases linearly (as opposed to exponentially)
-                                                           );
+            );
 
             dwa_params = DiscreetWorseAcceptParameters(
                 50,  // After this consecutive rejections, we accept a worsening move with probability 100%
                 true // Probability of accepting increases linearly [in the number of consecutive rejects] (as opposed to exponentially)
-                );
+            );
 
             acceptance_criterion_id = AcceptanceCriterionId::SimulatedAnnealing;
             acceptance_params_base = AcceptanceParamsBase::Iterations;
@@ -364,6 +362,6 @@ namespace mlpalns {
             log_file_basename = "WARNING_not_set";
         }
     };
-}
+} // namespace mlpalns
 
 #endif

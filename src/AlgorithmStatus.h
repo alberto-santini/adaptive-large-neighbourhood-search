@@ -38,11 +38,9 @@ namespace mlpalns {
         // Whether the new sol was the new global best sol
         bool new_best;
 
-        AlgorithmStatus(const Parameters& params,
-                        Solution& new_solution,
-                        Solution& best_solution) :
-            params{params}, new_solution{new_solution}, best_solution{best_solution} {}
+        AlgorithmStatus(const Parameters& params, Solution& new_solution, Solution& best_solution)
+            : params{params}, new_solution{new_solution}, best_solution{best_solution} {}
     };
-}
+} // namespace mlpalns
 
 #endif // ML_PALNS_ALGORITHMSTATUS_H

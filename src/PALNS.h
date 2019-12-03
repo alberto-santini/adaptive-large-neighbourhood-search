@@ -1,11 +1,11 @@
 #ifndef __PALNS_H
 #define __PALNS_H
 
+#include "AlgorithmVisitor.h"
 #include "DestroyMethod.h"
 #include "InitialSolutionCreator.h"
 #include "Parameters.h"
 #include "RepairMethod.h"
-#include "AlgorithmVisitor.h"
 
 #include "AcceptanceCriteria/ConservativeWorseAccept.h"
 #include "AcceptanceCriteria/DiscreetWorseAccept.h"
@@ -22,11 +22,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <deque>
 #include <memory>
 #include <mutex>
 #include <thread>
-#include <chrono>
 
 namespace mlpalns {
     /*! @brief This class models the PALNS algorithm solver
@@ -115,9 +115,7 @@ namespace mlpalns {
          *
          *  @param algorithm_visitor    The algorithm visitor.
          */
-        void set_algorithm_visitor(std::unique_ptr<AlgorithmVisitor<Solution>>& algorithm_visitor) {
-            this->algorithm_visitor = std::move(algorithm_visitor);
-        }
+        void set_algorithm_visitor(std::unique_ptr<AlgorithmVisitor<Solution>>& algorithm_visitor) { this->algorithm_visitor = std::move(algorithm_visitor); }
 
         /*! @brief  Sets the acceptance criterion manually. For this acceptance
          *          criterion to be actually used, the user must set property
@@ -145,12 +143,7 @@ namespace mlpalns {
             acceptance_criterion->initialise();
 
             // Invoke the algorithm visitor at the beginning of the algorithm
-            algorithm_visitor->on_algorithm_start(
-                destroy_methods,
-                repair_methods,
-                destroy_methods_descriptions,
-                repair_methods_descriptions
-            );
+            algorithm_visitor->on_algorithm_start(destroy_methods, repair_methods, destroy_methods_descriptions, repair_methods_descriptions);
 
             // Make a preliminary run
             do_preliminary_run(num_threads);
@@ -199,7 +192,8 @@ namespace mlpalns {
          *  @param parameters                    Algorithm parameters.
          *  @returns                             The best solution encountered over all the reruns.
          */
-        Solution repeat_solver(InitialSolutionCreator<Solution, ProblemInstance>* initial_solution_generator, std::uint32_t retries, std::uint32_t num_threads, Parameters parameters = Parameters()) {
+        Solution repeat_solver(InitialSolutionCreator<Solution, ProblemInstance>* initial_solution_generator, std::uint32_t retries, std::uint32_t num_threads,
+                               Parameters parameters = Parameters()) {
             std::mt19937::result_type random_data[std::mt19937::state_size];
             std::random_device source;
             std::generate(std::begin(random_data), std::end(random_data), std::ref(source));
@@ -230,7 +224,7 @@ namespace mlpalns {
             std::vector<std::unique_ptr<RepairMethod<Solution>>> loc_repair_methods;
             std::vector<std::vector<std::size_t>> loc_repair_compatibility;
 
-            auto make_local_copies_of_dr_methods = [&,this] () -> void {
+            auto make_local_copies_of_dr_methods = [&, this]() -> void {
                 loc_destroy_methods.clear();
                 loc_repair_methods.clear();
 
@@ -283,7 +277,7 @@ namespace mlpalns {
             // Main loop
             while(!done) {
                 // ****** 1. Check if we are done ******
-                
+
                 // Local current iteration
                 auto cur_iter = 0u;
 
@@ -503,12 +497,8 @@ namespace mlpalns {
                     // Update weights
                     {
                         std::lock_guard<std::mutex> _(weights_mtx);
-                        destroy_weights[chosen_destroy_id] =
-                            destroy_weights[chosen_destroy_id] * params.score_decay +
-                            new_score * (1 - params.score_decay);
-                        repair_weights[chosen_repair_id] =
-                            repair_weights[chosen_repair_id] * params.score_decay +
-                            new_score * (1 - params.score_decay);
+                        destroy_weights[chosen_destroy_id] = destroy_weights[chosen_destroy_id] * params.score_decay + new_score * (1 - params.score_decay);
+                        repair_weights[chosen_repair_id] = repair_weights[chosen_repair_id] * params.score_decay + new_score * (1 - params.score_decay);
                     }
 
                     // Do we have an algorithm visitor? If so, call it
@@ -639,8 +629,8 @@ namespace mlpalns {
          *  @return                       The index of the chosen element.
          */
         std::size_t roulette_wheel_selection(const std::vector<std::size_t>& compatible_methods, const std::vector<float>& weights, std::mt19937& mt) const {
-            // Like the previous method, but here only certain elements can be chosen, because they correspond to repair methods that are compatible with the chosen
-            // destroy method
+            // Like the previous method, but here only certain elements can be chosen, because they correspond to repair methods that are compatible with the
+            // chosen destroy method
 
             assert(!compatible_methods.empty());
 
@@ -673,7 +663,7 @@ namespace mlpalns {
          *  @param  start_solution    The initial solution.
          *  @param  parameters        Algorithm parameters.
          */
-        void reset_local_parameters(Solution start_solution, Parameters& parameters)  {
+        void reset_local_parameters(Solution start_solution, Parameters& parameters) {
             // We start at iteration 0
             num_iter = 0u;
 
@@ -707,64 +697,62 @@ namespace mlpalns {
 
             // Create a new acceptance criterion object
             switch(params.acceptance_criterion_id) {
-                case Parameters::AcceptanceCriterionId::HillClimbing:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new HillClimbing<Solution>(params));
-                    std::cout << "Acceptance criterion: Hill climbing" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::HillClimbing:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new HillClimbing<Solution>(params));
+                std::cout << "Acceptance criterion: Hill climbing" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::SimulatedAnnealing:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new SimulatedAnnealing<Solution>(params));
-                    std::cout << "Acceptance criterion: Simulated Annealing" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::SimulatedAnnealing:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new SimulatedAnnealing<Solution>(params));
+                std::cout << "Acceptance criterion: Simulated Annealing" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::ThresholdAcceptance:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new ThresholdAcceptance<Solution>(params));
-                    std::cout << "Acceptance criterion: Threshold acceptance" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::ThresholdAcceptance:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new ThresholdAcceptance<Solution>(params));
+                std::cout << "Acceptance criterion: Threshold acceptance" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::GreatDeluge:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new GreatDeluge<Solution>(params));
-                    std::cout << "Acceptance criterion: Great Deluge" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::GreatDeluge:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new GreatDeluge<Solution>(params));
+                std::cout << "Acceptance criterion: Great Deluge" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::RecordToRecordTravel:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new RecordToRecordTravel<Solution>(params));
-                    std::cout << "Acceptance criterion: Record-To-Record Travel" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::RecordToRecordTravel:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new RecordToRecordTravel<Solution>(params));
+                std::cout << "Acceptance criterion: Record-To-Record Travel" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::LateAcceptanceHillClimbing:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new LateAcceptanceHillClimbing<Solution>(params));
-                    std::cout << "Acceptance criterion: Late Acceptance Hill Climbing" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::LateAcceptanceHillClimbing:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new LateAcceptanceHillClimbing<Solution>(params));
+                std::cout << "Acceptance criterion: Late Acceptance Hill Climbing" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::NonLinearGreatDeluge:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new NLGreatDeluge<Solution>(params));
-                    std::cout << "Acceptance criterion: Non-linear Great Deluge" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::NonLinearGreatDeluge:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new NLGreatDeluge<Solution>(params));
+                std::cout << "Acceptance criterion: Non-linear Great Deluge" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::WorseAccept:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new WorseAccept<Solution>(params));
-                    std::cout << "Acceptance criterion: Worse-accept" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::WorseAccept:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new WorseAccept<Solution>(params));
+                std::cout << "Acceptance criterion: Worse-accept" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::ConservativeWorseAccept:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new ConservativeWorseAccept<Solution>(params));
-                    std::cout << "Acceptance criterion: Conservative Worse-accept" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::ConservativeWorseAccept:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new ConservativeWorseAccept<Solution>(params));
+                std::cout << "Acceptance criterion: Conservative Worse-accept" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::DiscreetWorseAccept:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new DiscreetWorseAccept<Solution>(params));
-                    std::cout << "Acceptance criterion: Discreet Worse-accept" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::DiscreetWorseAccept:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new DiscreetWorseAccept<Solution>(params));
+                std::cout << "Acceptance criterion: Discreet Worse-accept" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::RandomWalk:
-                    acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new RandomWalk<Solution>(params));
-                    std::cout << "Acceptance criterion: Random walk" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::RandomWalk:
+                acceptance_criterion = std::unique_ptr<AcceptanceCriterion<Solution>>(new RandomWalk<Solution>(params));
+                std::cout << "Acceptance criterion: Random walk" << std::endl;
+                break;
 
-                case Parameters::AcceptanceCriterionId::Custom:
-                    std::cout << "Acceptance criterion: Custom" << std::endl;
-                    break;
+            case Parameters::AcceptanceCriterionId::Custom: std::cout << "Acceptance criterion: Custom" << std::endl; break;
             }
         }
 
@@ -942,6 +930,6 @@ namespace mlpalns {
          *          iterations. */
         static constexpr std::uint32_t print_output_iter = 1000;
     };
-}
+} // namespace mlpalns
 
 #endif

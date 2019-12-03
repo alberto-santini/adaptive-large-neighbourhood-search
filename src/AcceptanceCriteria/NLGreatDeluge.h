@@ -94,6 +94,6 @@ namespace mlpalns {
         this->best_obj = best_obj;
         return (new_obj < current_obj - eps || new_obj < water_level - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

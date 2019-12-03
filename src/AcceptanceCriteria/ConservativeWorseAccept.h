@@ -92,7 +92,7 @@ namespace mlpalns {
                 current_prob = S * std::exp(-lambda * T);
             }
         } else {
-            if (prob_decrease_is_linear) {
+            if(prob_decrease_is_linear) {
                 current_prob -= prob_decrease;
             } else {
                 const auto N = this->params.max_iters - this->params.prerun_iters;
@@ -128,6 +128,6 @@ namespace mlpalns {
             return false;
         }
     }
-}
+} // namespace mlpalns
 
 #endif

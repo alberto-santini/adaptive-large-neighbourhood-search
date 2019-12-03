@@ -58,6 +58,6 @@ namespace mlpalns {
     bool RandomWalk<Solution>::should_accept(double, double, double, double, Solution&, std::mt19937&) {
         return true;
     }
-}
+} // namespace mlpalns
 
 #endif

@@ -80,10 +80,10 @@ namespace mlpalns {
                 current_prob = S + (elapsed_time / T) * (E - S);
             } else {
                 const auto lambda = std::log(S / T) / T;
-                current_prob = S * std::exp(- lambda * T);
+                current_prob = S * std::exp(-lambda * T);
             }
         } else {
-            if (prob_decrease_is_linear) {
+            if(prob_decrease_is_linear) {
                 current_prob -= prob_decrease;
             } else {
                 const auto N = this->params.max_iters - this->params.prerun_iters;
@@ -99,6 +99,6 @@ namespace mlpalns {
         std::uniform_real_distribution<double> dist(0.0, 1.0);
         return (new_obj < current_obj - eps || dist(mt) < current_prob - eps);
     }
-}
+} // namespace mlpalns
 
 #endif

@@ -5,8 +5,8 @@
 #ifndef ML_PALNS_REPAIRMETHOD_H
 #define ML_PALNS_REPAIRMETHOD_H
 
-#include <random>
 #include <memory>
+#include <random>
 
 namespace mlpalns {
     // Repair method
@@ -20,6 +20,6 @@ namespace mlpalns {
 
         virtual ~RepairMethod() = default;
     };
-}
+} // namespace mlpalns
 
 #endif // ML_PALNS_REPAIRMETHOD_H

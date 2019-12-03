@@ -5,8 +5,8 @@
 #ifndef ML_PALNS_DESTROYMETHOD_H
 #define ML_PALNS_DESTROYMETHOD_H
 
-#include <random>
 #include <memory>
+#include <random>
 
 namespace mlpalns {
     // Destroy method
@@ -20,6 +20,6 @@ namespace mlpalns {
 
         virtual ~DestroyMethod() = default;
     };
-}
+} // namespace mlpalns
 
 #endif // ML_PALNS_DESTROYMETHOD_H

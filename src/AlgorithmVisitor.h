@@ -8,8 +8,8 @@
 #include "AlgorithmStatus.h"
 #include "DestroyMethod.h"
 #include "RepairMethod.h"
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace mlpalns {
     /**
@@ -30,10 +30,8 @@ namespace mlpalns {
          * @param destroy_methods_desc A vector with string descriptions of the destroy methods.
          * @param repair_methods_desc  A vector with string descriptions of the repair methods.
          */
-        virtual void on_algorithm_start(std::vector<DestroyMethod<Solution>*>& destroy,
-                                        std::vector<RepairMethod<Solution>*>& repair,
-                                        const std::vector<std::string>& destroy_methods_desc,
-                                        const std::vector<std::string>& repair_methods_desc) = 0;
+        virtual void on_algorithm_start(std::vector<DestroyMethod<Solution>*>& destroy, std::vector<RepairMethod<Solution>*>& repair,
+                                        const std::vector<std::string>& destroy_methods_desc, const std::vector<std::string>& repair_methods_desc) = 0;
 
         /**
          * This method is called when the prerun (calibration run) ends.
@@ -41,8 +39,7 @@ namespace mlpalns {
          * @param destroy A vector with the destroy methods.
          * @param repair  A vector with the repair methods.
          */
-        virtual void on_prerun_end(std::vector<DestroyMethod<Solution>*>& destroy,
-                                   std::vector<RepairMethod<Solution>*>& repair) = 0;
+        virtual void on_prerun_end(std::vector<DestroyMethod<Solution>*>& destroy, std::vector<RepairMethod<Solution>*>& repair) = 0;
 
         /**
          * This method is called at the end of every iteration.
@@ -60,14 +57,13 @@ namespace mlpalns {
          * @param destroy A vector with the destroy methods.
          * @param repair  A vector with the repair methods.
          */
-        virtual void on_many_iters_without_improvement(std::vector<DestroyMethod<Solution>*>& destroy,
-                                                       std::vector<RepairMethod<Solution>*>& repair) = 0;
+        virtual void on_many_iters_without_improvement(std::vector<DestroyMethod<Solution>*>& destroy, std::vector<RepairMethod<Solution>*>& repair) = 0;
 
         /**
          * Virtual destructor.
          */
         virtual ~AlgorithmVisitor() = default;
     };
-}
+} // namespace mlpalns
 
 #endif // ML_PALNS_ALGORITHMVISITOR_H

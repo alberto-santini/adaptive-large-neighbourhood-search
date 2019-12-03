@@ -13,6 +13,6 @@ namespace mlpalns {
     struct InitialSolutionCreator {
         virtual Solution create_initial_solution(const ProblemInstance& instance, std::mt19937& mt) = 0;
     };
-}
+} // namespace mlpalns
 
 #endif // ML_PALNS_INITIALSOLUTIONCREATOR_H

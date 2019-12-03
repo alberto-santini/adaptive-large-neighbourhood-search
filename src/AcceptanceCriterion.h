@@ -40,10 +40,8 @@ namespace mlpalns {
         bool preliminary_run;
 
         /*! Basic constructor */
-        AcceptanceCriterion(Parameters& par) :
-                params(par),
-                timebase(par.acceptance_params_base == Parameters::AcceptanceParamsBase::Time),
-                preliminary_run(false) {}
+        AcceptanceCriterion(Parameters& par)
+            : params(par), timebase(par.acceptance_params_base == Parameters::AcceptanceParamsBase::Time), preliminary_run(false) {}
 
         /*! Setter for the preliminary run flag */
         void set_preliminary_run() { preliminary_run = true; }
@@ -84,6 +82,6 @@ namespace mlpalns {
          */
         virtual bool should_accept(double best_obj, double current_obj, double new_obj, double eps, Solution& new_sol, std::mt19937& mt) = 0;
     };
-}
+} // namespace mlpalns
 
 #endif

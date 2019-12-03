@@ -104,6 +104,6 @@ namespace mlpalns {
 
         return accepted;
     }
-}
+} // namespace mlpalns
 
 #endif
