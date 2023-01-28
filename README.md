@@ -36,15 +36,104 @@ If you use this software, please cite this last paper as follows:
 
 ## Usage
 
-The user needs to provide:
+Functions are thoroughly documented in the code, using Doxygen syntax.
+Because this is a metaheuristic framework, the user must implement the problem-specific parts.
+In terms of code, this means that the user needs to provide the components described below.
 
+### Problem instance and problem solution
+
+The user shall implement:
 * An object implementing an instance of the problem, with a public method `getInstanceSize()` which returns the size of the instance (e.g., the number of vertices in a TSP instance).
 * A class representing a solution of the problem, with a public method `getCost()` returning a cost to minimise (e.g., the length of a TSP tour).
 * A subclass of `InitialSolutionCreator` to produce an initial solution to the problem.
 
-The destroy and repair method will derive, respectively, from base classes `DestroyMethod` and `RepairMethod`.
+Once this is in-place, the user can create an instance of the `PALNS` object.
+For example:
+
+```cpp
+auto alns = PALNS<TSPInstance, TSPSolution>{instance};
+```
+
+Where `TSPInstance` is the class modelling the problem instance and `TSPSolution` is the class modelling the problem solution.
+The user must supply at least the functions mentioned above.
+For example:
+
+```cpp
+std::uint32_t TSPInstance::getInstanceSize() const {
+    return this->numberOfVertices;
+}
+
+double TSPSolution::getCost() const {
+    return this->tourLength;
+}
+```
+
+Moreover, because the ALNS method starts from a concrete solution, the user must supply an initial solution creator:
+
+```cpp
+struct TSPGreedyHeuristic : InitialSolutionCreator<TSPSolution, TSPInstance> {
+    TSPSolution create_initial_solution(const TPSInstance& instance, std::mt19937& mt) {
+        return TSPSolution::shuffled_vertices(mt);
+    }
+}
+```
+
+For reproducibility, the initial solution creator can use a pseudo-random number generator passed by the ALNS framework, of type `std::mt19937` (from the `<random>` header).
+
+### Destroy and repair methods
+
+The destroy and repair methods will derive, respectively, from base classes `DestroyMethod` and `RepairMethod`.
+A class inheriting from `DestroyMethod` shall implement two methods:
+* `void destroy_solution(Solution sol&, std::mt19937& mt)`, which takes a solution by reference (and a PRNG, if you need it) and destroys it in-place.
+* `std::unique_ptr<DestroyMethod<Solution>> clone() const`, which returns a `unique_ptr` to the base class `DestroyMethod` cloning the destroy method.
+Similarly, a class inheriting from `RepairMethod` shall implement:
+* `void repair_solution(Solution& sol, std::mt19937& mt)`, which takes a (destroyed) solution by reference (and a PRNG, if you need it) and repairs it in-place.
+* `std::unique_ptr<RepairMethod<Solution>> clone() const`, which returns a `unique_ptr` to the base class `RepairMethod` cloning the repair method.
+
+For example:
+
+```cpp
+struct RandomDestroy : public DestroyMethod<TSPSolution> {
+    void destroy_solution(TSPSolution& solution, std::mt19937& mt) {
+        std::bernoulli_distribution d(0.1);
+
+        for(const auto& v : solution.visited_vertices()) {
+            if(d(mt)) {
+                solution.queue_vertex_removal(v);
+            }
+        }
+
+        solution.remove_queued_vertices();
+    }
+
+    std::unique_ptr<DestroyMethod<TSPSolution>> clone() const {
+        return std::make_unique<DestroyMethod<TSPSolution>>();
+    }
+};
+
+struct GreedyRepair : public RepairMethod<TSPSoution> {
+    void repair_solution(Solution& sol, std::mt19937& mt) {
+        for(const auto& v : solution.missing_vertices()) {
+            solution.insert_vertex_in_best_position(v);
+        }
+    }
+
+    std::unique_ptr<RepairMethod<TSPSolution>> clone() const {
+        return std::make_unique<RepairMethod<TSPSolution>>();
+    }
+};
+```
+
+### Other components
+
 The user can choose between using one the predefined acceptance criteria, or implementing his own inheriting from base class `AcceptanceCriterion`.
 A handy way to monitor the algorithm and perform non-standard actions during the solution process is to provide a visitor object which inherits from `AlgorithmVisitor`.
+The algorithm visitor must implement the following callbacks:
+
+* `on_algorithm_start` which is called before the first ALNS iteration.
+* `on_prerun_end` which is called when the pre-run is finished (see section Parameters below).
+* `on_iteration_end` which is called at the end of each iteration.
+* `on_many_iters_without_improvement` which is called after a user-defined number of consecutive iterations without improving the best solution (see section Parameters below).
 
 ### Parameters
 
