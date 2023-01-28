@@ -1,0 +1,28 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Santini"
+    given-names: "Alberto"
+    orcid: "https://orcid.org/0000-0002-0440-0357"
+title: "Adaptive Large Neighbourhood Search"
+version: "v0.2"
+date-released: 2023-01-28
+doi: "10.5281/zenodo.7579708 "
+url: "https://github.com/alberto-santini/adaptive-large-neighbourhood-search"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Santini"
+    given-names: "Alberto"
+    orcid: "https://orcid.org/0000-0002-0440-0357"
+  - family-names: "Ropke"
+    given-names: "Stefan"
+  - family-names: "Hvattum"
+    given-names: "Lars Magnus"
+  title: "A comparison of acceptance criteria for the adaptive large neighbourhood search metaheuristic"
+  journal: "Journal of Heuristics"
+  volume: 24
+  year: 2018
+  doi: "10.1007/s10732-018-9377-x"
+  start: 783
+  end: 815
