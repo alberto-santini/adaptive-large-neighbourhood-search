@@ -1,5 +1,7 @@
 # Adaptive Large Neighbourhood Search
 
+[![DOI](https://zenodo.org/badge/116035646.svg)](https://zenodo.org/badge/latestdoi/116035646)
+
 This is a header-only C++ implementation of the (Parallel) Adaptive Large Neighbourhhod Search algorithm, devised by Ropke and Pisinger.
 The code is loosely based on the original implementation which Stefan Ropke has kindly shared with me.
 
