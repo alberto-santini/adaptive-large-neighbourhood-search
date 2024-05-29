@@ -73,7 +73,7 @@ double TSPSolution::getCost() const {
 Moreover, because the ALNS method starts from a concrete solution, the user must supply an initial solution creator:
 
 ```cpp
-struct TSPGreedyHeuristic : InitialSolutionCreator<TSPSolution, TSPInstance> {
+struct TSPRandomSolutionCreator : InitialSolutionCreator<TSPSolution, TSPInstance> {
     TSPSolution create_initial_solution(const TPSInstance& instance, std::mt19937& mt) {
         return TSPSolution::shuffled_vertices(mt);
     }
@@ -88,6 +88,7 @@ The destroy and repair methods will derive, respectively, from base classes `Des
 A class inheriting from `DestroyMethod` shall implement two methods:
 * `void destroy_solution(Solution sol&, std::mt19937& mt)`, which takes a solution by reference (and a PRNG, if you need it) and destroys it in-place.
 * `std::unique_ptr<DestroyMethod<Solution>> clone() const`, which returns a `unique_ptr` to the base class `DestroyMethod` cloning the destroy method.
+
 Similarly, a class inheriting from `RepairMethod` shall implement:
 * `void repair_solution(Solution& sol, std::mt19937& mt)`, which takes a (destroyed) solution by reference (and a PRNG, if you need it) and repairs it in-place.
 * `std::unique_ptr<RepairMethod<Solution>> clone() const`, which returns a `unique_ptr` to the base class `RepairMethod` cloning the repair method.
@@ -155,8 +156,7 @@ They are described below:
     * `global-best` if the new solution is better than the previous best solution, otherwise
     * `improved` if the new solution is better than the current solution, otherwise
     * `accepted` if the new solution was accepted by the acceptance criterion.
-The fourth multiplier, `decay`, determines how fast the above three values affect the methods' scores.
-A sade default is just a little less than 1.0, to ensure that scores change smoothly.
+    * The fourth multiplier, `decay`, determines how fast the above three values affect the methods' scores. A sane default is just a little less than 1.0, to ensure that scores change smoothly.
 * `parameter-tuning-file`: if performing parameter tuning, this is the filename where results will be saved.
 * `results-log-basename`: basename for the result files.
 
